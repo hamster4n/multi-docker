@@ -1,0 +1,24 @@
+sudo: required
+language: generic
+
+services:
+  - docker
+
+before_install:
+  - docker build -t stephengrider/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true stephengrider/react-test npm test
+
+after_success:
+  - docker build -t hamster4n/multi-client ./client
+  - docker build -t hamster4n/multi-nginx ./nginx
+  - docker build -t hamster4n/multi-server ./server
+  - docker build -t hamster4n/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push hamster4n/multi-client
+  - docker push hamster4n/multi-nginx
+  - docker push hamster4n/multi-server
+  - docker push hamster4n/multi-worker
